@@ -23,12 +23,6 @@ class Devices(object):
         self._handler = DevicesHandler()
         self._ports = dict()
 
-    def __getattr__(self, key):
-        return self._ports[key]
-
-    def __setattr__(self, key, value):
-        self._ports[key] = value
-
     def report_device(self):
         self._handler.collect_device()
         return self._report_device()
