@@ -80,7 +80,6 @@ def list_flows(flows, date_time):
                                time=to_timestamp(date_time),
                                src=src,
                                dst=dst,
-                               meta=dict(src=src, dst=dst )
                                )
                           )
     return values
