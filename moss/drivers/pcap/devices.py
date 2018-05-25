@@ -1,4 +1,4 @@
-
+from moss.drivers.pcap.device import Device
 
 class Devices(dict):
 

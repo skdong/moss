@@ -3,11 +3,6 @@ from abc import abstractmethod
 import re
 import pcap
 
-from util import get_now_second_datetime
-from util import formate_date_time
-from util import to_timestamp
-from util import DELAY
-
 from moss.drivers.pcap.devices import Devices
 
 
@@ -36,9 +31,6 @@ class DevicesDriver(object):
     def _load_pattern_devices(self):
         devices = self._get_net_devices()
         self._devices.load_net_devices(devices)
-
-    def load_devices(self):
-        self._load_pattern_devices()
 
     def report_metrics(self):
         self._load_pattern_devices()

@@ -1,7 +1,5 @@
 from collections import defaultdict
 from functools import partial
-import re
-import pcap
 
 from moss.common.utils import get_now_second_datetime
 from moss.common.utils import formate_date_time
@@ -19,7 +17,7 @@ ETHERTYPE_IP = 0x0800
 
 class Package(object):
     def __init__(self, timestamp, pkt):
-        self.date_time = formate_date_time(timestamp)
+        self.date_time = formate_date_time(timestamp+1)
         self._pkt = pkt
 
     @property
@@ -51,6 +49,10 @@ class Package(object):
 dst_dict = partial(defaultdict, int)
 src_dict = partial(defaultdict, dst_dict)
 
+def time_is_over(date_time):
+    now = get_now_second_datetime()
+    return now > date_time
+
 class NetFlowRate(object):
     def __init__(self):
         self.net_flows = defaultdict(src_dict)
@@ -59,12 +61,24 @@ class NetFlowRate(object):
         self.net_flows[package.date_time][package.src][package.dest] += package.length
 
     def pop_flows(self, closed=False):
-        flows = {}
-        now = get_now_second_datetime()
+        flows = list()
         for date_time in self.net_flows.keys():
-            if now > date_time or closed:
-               flows[date_time] = self.net_flows.pop(date_time)
+            if time_is_over(date_time) or closed:
+               flows.extend(self._pop_date_time_flows(date_time))
         return flows
+
+    def _pop_date_time_flows(self, date_time):
+        values = list()
+        for src, flows in self.net_flows.pop(date_time).iteritems():
+            for dst in flows:
+                values.append(dict(value=flows[dst],
+                                   time=to_timestamp(date_time),
+                                   src=src,
+                                   dst=dst,
+                                   meta=dict(src=src,
+                                             dst=dst,))
+                                 )
+        return values
 
 
 class NetFlowRateAnalyst(Plugin):
@@ -80,22 +94,5 @@ class NetFlowRateAnalyst(Plugin):
         if package.valid():
             self._collect(package)
 
-    def _report(self, flows):
-        values = list()
-        for date_time in flows:
-            for src in flows[date_time]:
-                for dst in flows[date_time][src]:
-                    values.append(dict(value=flows[date_time][src][dst],
-                                       time=to_timestamp(date_time),
-                                       src=src,
-                                       dst=dst,
-                                       meta=dict(src=src,
-                                                 dst=dst,))
-                                 )
-        return values
-
     def report(self, closed=True):
-        flows = self.net_flow_rate.pop_flows(closed)
-        return self._report(flows)
-
-
+        return self.net_flow_rate.pop_flows(closed)
