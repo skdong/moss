@@ -59,12 +59,12 @@ class Device(object):
 
     @property
     def closed(self):
-        return bool(self._driver)
+        return not bool(self._driver)
 
     @property
     def fileno(self):
         return self._driver.fileno()
 
     def __str__(self):
-        return 'device name: %s\n\tpackage %s'%(self.name,self.plugins)
+        return self.name
 

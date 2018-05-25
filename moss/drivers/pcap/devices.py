@@ -38,10 +38,12 @@ class Devices(object):
     def _clean_dirty_devices(self):
         for device in self._ports.values():
             if device.closed:
+                logger.debug('device %s has bean clean'%(device.name))
                 self._ports.pop(device.name)
 
     def _add_device(self, device):
         if device not in self._ports:
+            logger.debug('device %s, devices: %s'%(device, ','.join(self._ports.keys())))
             self._ports[device] = Device(device)
             self._handler.add_device(self._ports[device])
 
@@ -88,18 +90,18 @@ class DevicesHandler(object):
         device.close()
 
     def log_all_device(self):
-        logger.warning('all devic : %s'%(','.join([
+        logger.notice('all devic : %s'%(','.join([
             '%s %s'%(value.name,key)
             for key, value in self._handlers.iteritems()
         ])))
 
     def collect_device(self):
-        logger.warning('epoll device begin')
+        logger.notice('epoll device begin')
         for handle, event in self._epoll.poll():
             device = self._handlers[handle]
-            logger.warning('%s has package'%device.name)
+            logger.debug('%s has package'%device.name)
             device.collec_package()
-        logger.warning('epoll device over')
+        logger.notice('epoll device over')
 
         self.log_all_device()
 
