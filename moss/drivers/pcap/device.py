@@ -28,7 +28,6 @@ class Device(object):
     def __init__(self, name=None):
         self.name = name
         self._driver = pcap.pcap(name)
-        self.fileno = self._driver.fileno()
         self.plugins = [NetFlowRateAnalyst()]
 
     def _collect_package(self, timestamp, pkt):
@@ -61,6 +60,10 @@ class Device(object):
     @property
     def closed(self):
         return bool(self._driver)
+
+    @property
+    def fileno(self):
+        return self._driver.fileno()
 
     def __str__(self):
         return 'device name: %s\n\tpackage %s'%(self.name,self.plugins)

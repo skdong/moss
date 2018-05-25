@@ -76,14 +76,15 @@ class DevicesHandler(object):
         self._epoll.close()
 
     def add_device(self, device):
-        if device.fileno() not in self._handlers:
-            self._handlers[device.fileno()]  = device
-            self._epoll.register(device.fileno(), select.EPOLLIN)
+        if device.fileno and device.fileno not in self._handlers:
+            self._handlers[device.fileno]  = device
+            self._epoll.register(device.fileno, select.EPOLLIN)
 
     def del_device(self, device):
         self.collect_device()
-        self._handlers.pop(device.fileno(), None)
-        self._epoll.unregister(device.fileno())
+        self._handlers.pop(device.fileno, None)
+        if device.fileno:
+            self._epoll.unregister(device.fileno)
 
     def collect_device(self):
         for handle, event in self._epoll.poll():
