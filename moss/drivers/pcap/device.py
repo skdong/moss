@@ -19,7 +19,7 @@ import pcap
 from moss.drivers.pcap.net_analyst import NetFlowRateAnalyst
 
 
-PACAGE_NUM = 1024
+PACAGE_NUM = 0
 NET_DEV = '/proc/net/dev'
 DEV_PATTERN = re.compile(r'tap\w*-\w*')
 
@@ -28,6 +28,7 @@ class Device(object):
     def __init__(self, name=None):
         self.name = name
         self._driver = pcap.pcap(name)
+        self.fileno = self._driver.fileno()
         self.plugins = [NetFlowRateAnalyst()]
 
     def _collect_package(self, timestamp, pkt):
@@ -43,12 +44,11 @@ class Device(object):
                 aggregates.append(aggregate)
         return aggregates
 
+    def collec_package(self):
+        if self._driver:
+            self._driver.dispatch(PACAGE_NUM, self._collect_package)
+
     def report_packages(self):
-        while True:
-            if self._driver:
-                num = self._driver.dispatch(PACAGE_NUM, self._collect_package)
-                if num == 0:
-                    break
         return self._report_aggregate()
 
     def close(self):

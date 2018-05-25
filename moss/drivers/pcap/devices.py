@@ -13,42 +13,86 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import select
+
 from moss.drivers.pcap.device import Device
 
 
-class Devices(dict):
+class Devices(object):
+    def __init__(self):
+        self._handler = DevicesHandler()
+        self._ports = dict()
+
     def __getattr__(self, key):
-        return self[key]
+        return self._ports[key]
 
     def __setattr__(self, key, value):
-        self[key] = value
+        self._ports[key] = value
 
     def report_device(self):
+        self._handler.collect_device()
+        return self._report_device()
+
+    def _report_device(self):
         metrics = list()
-        for device in self.values():
+        for device in self._ports.values():
             metrics.extend(device.report_packages())
         self._clean_dirty_devices()
         return metrics
 
     def _clean_dirty_devices(self):
-        for device in self.values():
+        for device in self._ports.values():
             if device.closed:
-                self.pop(device.name)
+                self._ports.pop(device.name)
 
     def _add_device(self, device):
-        if device not in self.keys():
-            self[device] = Device(device)
+        if device not in self._ports.keys():
+            self._ports[device] = Device(device)
+            self._handler.add_device(self._ports[device])
 
     def load_net_devices(self, devices):
-        for key in self.keys():
+        for key in self._ports.keys():
             if key not in devices:
-                self[key].close()
+                self._close_device(key)
         for device in devices:
             self._add_device(device)
 
     def __str__(self):
-        return '\n'.join(['%s: %s' % (k, v) for k, v in self.items()])
+        return '\n'.join(['%s: %s' % (k, v) for k, v in self._ports.items()])
+
+    def _close_device(self, name):
+        device = self._ports.get(name)
+        self._handler.del_device(device)
+        device.close()
 
     def close(self):
-        for device in self.values():
+        self._handler.close()
+        for device in self._ports.values():
             device.close()
+
+
+
+class DevicesHandler(object):
+
+    def __init__(self):
+        self._epoll = select.epoll()
+        self._handlers = dict()
+
+    def close(self):
+        self._epoll.close()
+
+    def add_device(self, device):
+        if device.fileno() not in self._handlers:
+            self._handlers[device.fileno()]  = device
+            self._epoll.register(device.fileno(), select.EPOLLIN)
+
+    def del_device(self, device):
+        self.collect_device()
+        self._handlers.pop(device.fileno(), None)
+        self._epoll.unregister(device.fileno())
+
+    def collect_device(self):
+        for handle, event in self._epoll.poll():
+            device = self._handlers[handle]
+            device.collec_package()
+
