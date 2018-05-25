@@ -16,6 +16,7 @@
 import select
 
 from moss.drivers.pcap.device import Device
+from moss.common.logging import logger
 
 
 class Devices(object):
@@ -87,7 +88,10 @@ class DevicesHandler(object):
         device.close()
 
     def collect_device(self):
+        logger.warning('epoll device begin')
         for handle, event in self._epoll.poll():
+            logger.warning('%s has package'%handle)
             device = self._handlers[handle]
             device.collec_package()
+        logger.warning('epoll device over')
 

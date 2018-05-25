@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import json
-import traceback
 import collectd
 
 from moss.drivers.pcap.driver import DevicesDriver
