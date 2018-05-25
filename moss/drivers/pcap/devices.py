@@ -57,7 +57,6 @@ class Devices(object):
     def _close_device(self, name):
         device = self._ports.get(name)
         self._handler.del_device(device)
-        device.close()
 
     def close(self):
         self._handler.close()
@@ -85,6 +84,7 @@ class DevicesHandler(object):
         self._handlers.pop(device.fileno, None)
         if device.fileno:
             self._epoll.unregister(device.fileno)
+        device.close()
 
     def collect_device(self):
         for handle, event in self._epoll.poll():
