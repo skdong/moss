@@ -17,13 +17,13 @@ import json
 import traceback
 import collectd
 
-from metric_flow import DevicesManager
-
+from moss.drivers.pcap.driver import DevicesDriver
 
 INTERVAL = 10
 
 PLUGIN = 'pcap'
 PLUGIN_INSTANCE = ''
+
 
 class Pcap(object):
     """Pcap class for writing Python plugins."""
@@ -40,11 +40,11 @@ class Pcap(object):
 
         self.service_name = service_name
         self.local_check = True
-        self._devices_manage = None
+        self._devices_driver = None
 
     def init_callback(self):
-        self._devices_manage = DevicesManager()
-        self._devices_manage.load_devices()
+        self._devices_driver = DevicesDriver()
+        self._devices_driver.load_devices()
 
     def config_callback(self, conf):
         for node in conf.children:
@@ -60,12 +60,11 @@ class Pcap(object):
 
     def read_callback(self):
         try:
-            for metric in self._devices_manage.report_metrics():
+            for metric in self._devices_driver.report_metrics():
                 self.dispatch_metric(metric)
         except Exception as e:
             msg = '{}: Failed to get metrics: {}'.format(PLUGIN, e)
             self.logger.warning(msg)
-
 
     def dispatch_metric(self, metric):
         try:
@@ -74,8 +73,8 @@ class Pcap(object):
                 plugin_instance=metric.get('device'),
                 plugin=PLUGIN,
                 type='gauge',
-                type_instance=(metric.get('src')+'-'+metric.get('dst')),
-                values=[metric.get('value'),],
+                type_instance=(metric.get('src') + '-' + metric.get('dst')),
+                values=[metric.get('value'), ],
                 meta=metric.get('meta')
             )
             v.dispatch()
@@ -109,7 +108,7 @@ class Pcap(object):
             self.do_collect_data = do_collect_data
 
     def shutdown_callback(self):
-        self._devices_manage.shutdown()
+        self._devices_driver.shutdown()
 
 
 plugin = Pcap(collectd, 'pcap')
