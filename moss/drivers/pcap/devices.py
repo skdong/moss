@@ -41,7 +41,7 @@ class Devices(object):
                 self._ports.pop(device.name)
 
     def _add_device(self, device):
-        if device not in self._ports.keys():
+        if device not in self._ports:
             self._ports[device] = Device(device)
             self._handler.add_device(self._ports[device])
 
@@ -87,11 +87,19 @@ class DevicesHandler(object):
             self._epoll.unregister(device.fileno)
         device.close()
 
+    def log_all_device(self):
+        logger.warning('all devic : %s'%(','.join([
+            '%s %s'%(value.name,key)
+            for key, value in self._handlers.iteritems()
+        ])))
+
     def collect_device(self):
         logger.warning('epoll device begin')
         for handle, event in self._epoll.poll():
-            logger.warning('%s has package'%handle)
             device = self._handlers[handle]
+            logger.warning('%s has package'%device.name)
             device.collec_package()
         logger.warning('epoll device over')
+
+        self.log_all_device()
 
