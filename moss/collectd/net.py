@@ -33,7 +33,6 @@ class Pcap(object):
         self.max_retries = 3
         self.logger = collectd
         self.collectd = collectd
-        # attributes controlling whether the plugin is in collect mode or not
         self.depends_on_resource = None
         self.do_collect_data = True
 
