@@ -421,6 +421,10 @@ function process_message ()
                 msg['Fields']['name'] = 'openstack_check_local_api'
                 msg['Fields']['service'] = sample['type_instance']
                 table.insert(msg['Fields']['tag_fields'], 'service')
+            elseif metric_source == 'pcap' then
+                msg['Fields']['name'] = sample['plugin_instance']
+                msg['Fields']['flow'] = sample['type_instance']
+                table.insert(msg['Fields']['tag_fields'], 'flow')
             else
                 msg['Fields']['name'] = replace_dot_by_sep(metric_name)
             end
