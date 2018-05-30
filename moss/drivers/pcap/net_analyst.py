@@ -59,67 +59,23 @@ class Package(object):
         return self.addr(ETHER_HEADER_LEN + SRC_OFF)
 
     @property
-    def dest(self):
+    def dst(self):
         return self.addr(ETHER_HEADER_LEN + DST_OFF)
 
-
-dst_dict = partial(defaultdict, int)
-src_dict = partial(defaultdict, dst_dict)
-
-
-def time_is_over(date_time):
-    now = get_now_second_datetime(delay=DELAY)
-    return now > date_time
-
-
-def list_flows(flows, date_time):
-    values = list()
-    for src in flows:
-        for dst in flows[src]:
-            values.append(dict(value=flows[src][dst],
-                               time=to_timestamp(date_time),
-                               src=src,
-                               dst=dst,
-                               )
-                          )
-    return values
-
-
-class NetFlowRate(object):
-    def __init__(self):
-        self.net_flows = defaultdict(src_dict)
-
-    def add(self, package):
-        self.net_flows[package.date_time][package.src][package.dest] += package.length
-
-    def pop_flows(self, closed=False):
-        """
-        :param closed: type bool mean if device is close
-        :return: list type, metrics array
-        """
-        flows = list()
-        for date_time in self.net_flows.keys():
-            if time_is_over(date_time) or closed:
-                flows.extend(self._pop_date_time_flows(date_time))
-        return flows
-
-    def _pop_date_time_flows(self, date_time):
-        return list_flows(self.net_flows.pop(date_time), date_time)
-
-    def __str__(self):
-        values = list()
-        for date_time, flows in self.net_flows.iteritems():
-            values.extend(list_flows(flows, date_time))
-        return '\n'.join(values)
+    def report(self):
+        return dict(time=self.date_time,
+                    src=self.src,
+                    dst=self.dst,
+                    value=self.length)
 
 
 class NetFlowRateAnalyst(Plugin):
     def __init__(self):
         self.name = 'flow_rate'
-        self.net_flow_rate = NetFlowRate()
+        self.net_flow_rate = list()
 
     def _collect(self, package):
-        self.net_flow_rate.add(package)
+        self.net_flow_rate.append(package.report())
 
     def collet(self, timestamp, pkt):
         package = Package(timestamp, pkt)
@@ -127,7 +83,9 @@ class NetFlowRateAnalyst(Plugin):
             self._collect(package)
 
     def report(self, closed=True):
-        return self.net_flow_rate.pop_flows(closed)
+        flows = self.net_flow_rate
+        self.net_flow_rate = list()
+        return flows
 
     def __str__(self):
         return self.name
