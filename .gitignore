@@ -1,3 +1,4 @@
 build
 moss.egg-info
 *.pyc
+.idea
