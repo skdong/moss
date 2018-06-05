@@ -422,11 +422,15 @@ function process_message ()
                 msg['Fields']['service'] = sample['type_instance']
                 table.insert(msg['Fields']['tag_fields'], 'service')
             elseif metric_source == 'pcap' then
-                msg['Fields']['name'] = 'vif_net_flow'
+                msg['Fields']['name'] = sample['plugin_instance']
                 msg['Fields']['interface'] = sample['plugin_instance']
                 table.insert(msg['Fields']['tag_fields'], 'interface')
-                msg['Fields']['flow'] = sample['type_instance']
-                table.insert(msg['Fields']['tag_fields'], 'flow')
+                flow = sample['type_instance']
+                msg['Fields']['value_fields'] = {}
+                table.insert(msg['Fields']['value_fields'], flow)
+                msg['Fields'][flow] = value
+                -- msg['Fields']['flow'] = sample['type_instance']
+                -- table.insert(msg['Fields']['tag_fields'], 'flow')
             else
                 msg['Fields']['name'] = replace_dot_by_sep(metric_name)
             end

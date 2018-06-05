@@ -42,7 +42,7 @@ class Pcap(object):
 
     def init_callback(self):
         self._devices_driver = DevicesDriver()
-        self._devices_driver.load_devices()
+        self._devices_driver.start()
 
     def config_callback(self, conf):
         for node in conf.children:
@@ -71,7 +71,7 @@ class Pcap(object):
                 plugin_instance=metric.get('device'),
                 plugin=PLUGIN,
                 type='gauge',
-                type_instance=(metric.get('src') + '-' + metric.get('dst')),
+                type_instance=(metric.get('src') + '->' + metric.get('dst')),
                 values=[metric.get('value'), ],
                 meta=metric.get('meta')
             )

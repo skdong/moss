@@ -30,9 +30,9 @@ class Device(object):
         self._driver = pcap.pcap(name)
         self.plugins = [NetFlowRateAnalyst()]
 
-    def _collect_package(self, timestamp, pkt):
+    def _collect_samples(self, timestamp, pkt):
         for plugin in self.plugins:
-            plugin.collet(timestamp, pkt)
+            plugin.collect(timestamp, pkt)
 
     def _report_aggregate(self):
         aggregates = list()
@@ -43,9 +43,9 @@ class Device(object):
                 aggregates.append(aggregate)
         return aggregates
 
-    def collec_package(self):
+    def collect_samples(self):
         if self._driver:
-            self._driver.dispatch(PACAGE_NUM, self._collect_package)
+            self._driver.dispatch(PACAGE_NUM, self._collect_samples)
 
     def report_packages(self):
         return self._report_aggregate()

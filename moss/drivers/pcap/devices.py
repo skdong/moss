@@ -24,8 +24,13 @@ class Devices(object):
         self._handler = DevicesHandler()
         self._ports = dict()
 
+    def collect_samples(self, timeout=-1):
+        self._collect_samples(timeout)
+
+    def _collect_samples(self, timeout=-1):
+        self._handler.collect_samples(timeout)
+
     def report_device(self):
-        self._handler.collect_device()
         return self._report_device()
 
     def _report_device(self):
@@ -95,13 +100,10 @@ class DevicesHandler(object):
             for key, value in self._handlers.iteritems()
         ])))
 
-    def collect_device(self):
-        logger.notice('epoll device begin')
-        for handle, event in self._epoll.poll():
+    def collect_samples(self, timeout=-1):
+        for handle, event in self._epoll.poll(timeout=timeout):
             device = self._handlers[handle]
             logger.debug('%s has package'%device.name)
-            device.collec_package()
-        logger.notice('epoll device over')
+            device.collect_samples()
 
-        self.log_all_device()
 

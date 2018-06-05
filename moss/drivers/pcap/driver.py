@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import re
+import threading
 
 from moss.drivers.pcap.devices import Devices
 
@@ -21,12 +22,17 @@ PACAGE_NUM = 1024
 NET_DEV = '/proc/net/dev'
 DEV_PATTERN = re.compile(r'tap\w*-\w*')
 
+TIME_OUT = 5
+
 
 class DevicesDriver(object):
     def __init__(self, net_dev=NET_DEV, dev_pattern=DEV_PATTERN):
         self._net_dev = net_dev
         self._dev_pattern = dev_pattern
         self._devices = Devices()
+
+        self.stopped = True
+        self.collector = threading.Thread(target=self._collect_samples)
 
     def dump_devices(self):
         return str(self._devices)
@@ -45,13 +51,21 @@ class DevicesDriver(object):
         self._devices.load_net_devices(devices)
 
     def report_metrics(self):
-        self._load_pattern_devices()
         return self._devices.report_device()
 
-    def load_devices(self):
-        self._load_pattern_devices()
+    def _collect_samples(self):
+        while True:
+            if not self._devices or self.stopped:
+                break
+            self._load_pattern_devices()
+            self._devices.collect_samples(timeout=TIME_OUT)
+
+    def start(self):
+        self.stopped = False
+        self.collector.start()
 
     def shutdown(self):
+        self.stopped = True
         self._devices.close()
         self._devices = None
 
