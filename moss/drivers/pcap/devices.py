@@ -35,16 +35,16 @@ class Devices(object):
 
     def _report_device(self):
         metrics = list()
-        for device in self._ports.values():
-            metrics.extend(device.report_packages())
+        for port in self._ports.values():
+            metrics.extend(port.report_packages())
         self._clean_dirty_devices()
         return metrics
 
     def _clean_dirty_devices(self):
-        for device in self._ports.values():
-            if device.closed:
-                logger.debug('device %s has bean clean'%(device.name))
-                self._ports.pop(device.name)
+        for port in self._ports.values():
+            if port.closed:
+                logger.debug('device %s has bean clean'%(port.name))
+                self._ports.pop(port.name, None)
 
     def _add_device(self, device):
         if device not in self._ports:
@@ -88,7 +88,7 @@ class DevicesHandler(object):
             self._epoll.register(device.fileno, select.EPOLLIN)
 
     def del_device(self, device):
-        self.collect_device()
+        self.collect_samples()
         self._handlers.pop(device.fileno, None)
         if device.fileno:
             self._epoll.unregister(device.fileno)

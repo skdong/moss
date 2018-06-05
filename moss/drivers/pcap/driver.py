@@ -72,12 +72,3 @@ class DevicesDriver(object):
     def close(self):
         self._devices.close()
 
-
-def main():
-    manage = DevicesDriver()
-    manage.report_metrics()
-    manage.close()
-
-
-if __name__ == '__main__':
-    main()

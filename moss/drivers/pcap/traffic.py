@@ -71,7 +71,8 @@ class Package(object):
 
     @property
     def direction(self):
-        return '{src}->{dst}'.format({src:self.src, dst:self.dst})
+        return '{src}->{dst}'.format(src=self.src,
+                                     dst=self.dst)
 
     def report(self):
         return dict(time=self.date_time,
@@ -89,60 +90,59 @@ def time_is_over(date_time):
     return now > date_time
 
 
-def list_flows(flows, date_time):
+def list_rates(rates, date_time):
     values = list()
-    for src in flows:
-        for dst in flows[src]:
-            values.append(dict(value=flows[src][dst],
+    for src in rates:
+        for dst in rates[src]:
+            values.append(dict(value=rates[src][dst],
                                time=to_timestamp(date_time),
-                               src=src,
-                               dst=dst,
-                               meta=dict(),
+                               meta=dict(src=src, dst=dst),
                                )
                           )
     return values
 
 
-class NetFlowRate(object):
+class NetTraffic(object):
     def __init__(self):
-        self.net_flows = defaultdict(src_dict)
+        self._rates = defaultdict(src_dict)
 
     def _log_packages(self, package):
         if package.src == '192.168.0.37' and package.dst == '192.168.0.36':
             logger.warning("%s src: %s dst: %s len %s"%(
                              package.date_time, package.src, package.dst,
-                             self.net_flows[package.date_time][package.src][package.dst]))
+                             self._rates[package.date_time][package.src][package.dst]))
 
     def add(self, package):
-        self.net_flows[package.date_time][package.src][package.dst] += package.length
+        self._rates[package.date_time][package.src][package.dst] += package.length
 
-    def pop_flows(self, closed=False):
+    def pop_rates(self, closed=False):
         """
         :param closed: type bool mean if device is close
         :return: list type, metrics array
         """
-        flows = list()
-        for date_time in self.net_flows.keys():
+        rates = list()
+        for date_time in self._rates.keys():
             if time_is_over(date_time) or closed:
-                flows.extend(self._pop_date_time_flows(date_time))
-        return flows
+                rates.extend(self._pop_date_time_rates(date_time))
+        return rates
 
-    def _pop_date_time_flows(self, date_time):
-        return list_flows(self.net_flows.pop(date_time), date_time)
+    def _pop_date_time_rates(self, date_time):
+        return list_rates(self._rates.pop(date_time), date_time)
 
     def __str__(self):
         values = list()
-        for date_time, flows in self.net_flows.iteritems():
-            values.extend(list_flows(flows, date_time))
+        for date_time, flows in self._rates.iteritems():
+            values.extend(list_rates(flows, date_time))
         return '\n'.join(values)
 
-class NetFlowRateAnalyst(Plugin):
+
+class TrafficCounter(Plugin):
     def __init__(self):
-        self.name = 'flow_rate'
-        self.net_flow_rate = NetFlowRate()
+        self.name = 'traffic_counter'
+        self.net_traffic = NetTraffic()
 
     def _collect(self, package):
-        self.net_flow_rate.add(package)
+        self.net_traffic.add(package)
 
     def collect(self, timestamp, pkt):
         package = Package(timestamp, pkt)
@@ -150,7 +150,7 @@ class NetFlowRateAnalyst(Plugin):
             self._collect(package)
 
     def report(self, closed=False):
-        return self.net_flow_rate.pop_flows(closed)
+        return self.net_traffic.pop_rates(closed)
 
     def __str__(self):
         return self.name

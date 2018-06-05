@@ -421,14 +421,14 @@ function process_message ()
                 msg['Fields']['name'] = 'openstack_check_local_api'
                 msg['Fields']['service'] = sample['type_instance']
                 table.insert(msg['Fields']['tag_fields'], 'service')
-            elseif metric_source == 'pcap' then
-                msg['Fields']['name'] = sample['plugin_instance']
+            elseif metric_source == 'port_traffic' then
+                msg['Fields']['name'] = metric_source
                 msg['Fields']['interface'] = sample['plugin_instance']
                 table.insert(msg['Fields']['tag_fields'], 'interface')
-                flow = sample['type_instance']
-                msg['Fields']['value_fields'] = {}
-                table.insert(msg['Fields']['value_fields'], flow)
-                msg['Fields'][flow] = value
+                msg['Fields']['src'] = sample['meta']['src']
+                table.insert(msg['Fields']['tag_fields'], 'src')
+                msg['Fields']['dst'] = sample['meta']['dst']
+                table.insert(msg['Fields']['tag_fields'], 'dst')
                 -- msg['Fields']['flow'] = sample['type_instance']
                 -- table.insert(msg['Fields']['tag_fields'], 'flow')
             else

@@ -16,7 +16,7 @@
 import re
 import pcap
 
-from moss.drivers.pcap.net_analyst import NetFlowRateAnalyst
+from moss.drivers.pcap.traffic import TrafficCounter
 
 
 PACAGE_NUM = 0
@@ -28,7 +28,7 @@ class Device(object):
     def __init__(self, name=None):
         self.name = name
         self._driver = pcap.pcap(name)
-        self.plugins = [NetFlowRateAnalyst()]
+        self.plugins = [TrafficCounter()]
 
     def _collect_samples(self, timestamp, pkt):
         for plugin in self.plugins:

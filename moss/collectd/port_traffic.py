@@ -20,12 +20,12 @@ from moss.drivers.pcap.driver import DevicesDriver
 
 INTERVAL = 10
 
-PLUGIN = 'pcap'
+PLUGIN = 'port_traffic'
 PLUGIN_INSTANCE = ''
 
 
-class Pcap(object):
-    """Pcap class for writing Python plugins."""
+class PortTraffic(object):
+    """PortTraffic class for writing Python plugins."""
 
     def __init__(self, collectd, service_name=None, local_check=True):
         self.debug = False
@@ -71,7 +71,7 @@ class Pcap(object):
                 plugin_instance=metric.get('device'),
                 plugin=PLUGIN,
                 type='gauge',
-                type_instance=(metric.get('src') + '->' + metric.get('dst')),
+                type_instance='',
                 values=[metric.get('value'), ],
                 meta=metric.get('meta')
             )
@@ -109,7 +109,7 @@ class Pcap(object):
         self._devices_driver.shutdown()
 
 
-plugin = Pcap(collectd, 'pcap')
+plugin = PortTraffic(collectd, 'port_traffic')
 
 
 def init_callback():
