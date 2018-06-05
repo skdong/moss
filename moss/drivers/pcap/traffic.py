@@ -84,6 +84,8 @@ class Package(object):
 dst_dict = partial(defaultdict, int)
 src_dict = partial(defaultdict, dst_dict)
 
+direction_dict = partial(defaultdict, int)
+
 
 def time_is_over(date_time):
     now = get_now_second_datetime(delay=DELAY)
@@ -92,19 +94,18 @@ def time_is_over(date_time):
 
 def list_rates(rates, date_time):
     values = list()
-    for src in rates:
-        for dst in rates[src]:
-            values.append(dict(value=rates[src][dst],
-                               time=to_timestamp(date_time),
-                               meta=dict(src=src, dst=dst),
-                               )
-                          )
+    for direction, rate in rates.items():
+        values.append(dict(value=rate,
+                           time=to_timestamp(date_time),
+                           meta=dict(direction=direction ),
+                           )
+                      )
     return values
 
 
 class NetTraffic(object):
     def __init__(self):
-        self._rates = defaultdict(src_dict)
+        self._rates = defaultdict(direction_dict)
 
     def _log_packages(self, package):
         if package.src == '192.168.0.37' and package.dst == '192.168.0.36':
@@ -113,7 +114,7 @@ class NetTraffic(object):
                              self._rates[package.date_time][package.src][package.dst]))
 
     def add(self, package):
-        self._rates[package.date_time][package.src][package.dst] += package.length
+        self._rates[package.date_time][package.direction] += package.length
 
     def pop_rates(self, closed=False):
         """

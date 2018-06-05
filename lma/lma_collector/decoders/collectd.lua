@@ -425,10 +425,8 @@ function process_message ()
                 msg['Fields']['name'] = metric_source
                 msg['Fields']['interface'] = sample['plugin_instance']
                 table.insert(msg['Fields']['tag_fields'], 'interface')
-                msg['Fields']['src'] = sample['meta']['src']
-                table.insert(msg['Fields']['tag_fields'], 'src')
-                msg['Fields']['dst'] = sample['meta']['dst']
-                table.insert(msg['Fields']['tag_fields'], 'dst')
+                msg['Fields']['direction'] = sample['meta']['direction']
+                table.insert(msg['Fields']['tag_fields'], 'direction')
                 -- msg['Fields']['flow'] = sample['type_instance']
                 -- table.insert(msg['Fields']['tag_fields'], 'flow')
             else
